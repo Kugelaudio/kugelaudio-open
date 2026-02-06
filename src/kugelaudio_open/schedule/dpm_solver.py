@@ -292,7 +292,9 @@ class DPMSolverMultistepScheduler(SchedulerMixin, ConfigMixin):
         self.lower_order_nums = 0
         self._step_index = None
         self._begin_index = None
-        self.sigmas = self.sigmas.to("cpu")  # to avoid too much CPU/GPU communication
+        # Only move sigmas to CPU if not on meta device (to avoid meta tensor errors during init)
+        if self.sigmas.device.type != 'meta':
+            self.sigmas = self.sigmas.to("cpu")  # to avoid too much CPU/GPU communication
 
     @property
     def step_index(self):

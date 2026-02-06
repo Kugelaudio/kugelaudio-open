@@ -758,7 +758,31 @@ class TokenizerEncoder(nn.Module):
         )
         
         self.stages = nn.ModuleList()
-        dp_rates = [x.item() for x in torch.linspace(0, drop_path_rate, sum(self.depths))] 
+        # Convert depths to list and extract values to handle meta tensors
+        # When loading with meta device, we can't access tensor values
+        # so we need to defer this calculation or use config values directly
+        try:
+            depths_list = []
+            for d in self.depths:
+                if isinstance(d, torch.Tensor):
+                    # Try to get the value, but if it's a meta tensor, this will fail
+                    depths_list.append(int(d.item()))
+                else:
+                    depths_list.append(int(d))
+            total_depth = sum(depths_list)
+        except (NotImplementedError, RuntimeError):
+            # If we hit meta tensors, depths should be plain Python ints from config
+            # Convert to int explicitly to ensure we don't have tensors
+            depths_list = [int(d) for d in self.depths]
+            total_depth = sum(depths_list)
+        
+        # Ensure drop_path_rate is a float, not a tensor
+        if isinstance(drop_path_rate, torch.Tensor):
+            drop_path_rate = float(drop_path_rate.item() if drop_path_rate.numel() == 1 else drop_path_rate)
+        
+        # Create linspace on CPU to avoid meta device issues, then convert to list
+        # This avoids "Cannot copy out of meta tensor" error during model initialization
+        dp_rates = torch.linspace(0, drop_path_rate, total_depth, device='cpu').tolist()
         cur = 0
 
         for i in range(len(self.depths)):
@@ -895,7 +919,31 @@ class TokenizerDecoder(nn.Module):
         )
 
         self.stages = nn.ModuleList()
-        dp_rates = [x.item() for x in torch.linspace(0, drop_path_rate, sum(self.depths))] 
+        # Convert depths to list and extract values to handle meta tensors
+        # When loading with meta device, we can't access tensor values
+        # so we need to defer this calculation or use config values directly
+        try:
+            depths_list = []
+            for d in self.depths:
+                if isinstance(d, torch.Tensor):
+                    # Try to get the value, but if it's a meta tensor, this will fail
+                    depths_list.append(int(d.item()))
+                else:
+                    depths_list.append(int(d))
+            total_depth = sum(depths_list)
+        except (NotImplementedError, RuntimeError):
+            # If we hit meta tensors, depths should be plain Python ints from config
+            # Convert to int explicitly to ensure we don't have tensors
+            depths_list = [int(d) for d in self.depths]
+            total_depth = sum(depths_list)
+        
+        # Ensure drop_path_rate is a float, not a tensor
+        if isinstance(drop_path_rate, torch.Tensor):
+            drop_path_rate = float(drop_path_rate.item() if drop_path_rate.numel() == 1 else drop_path_rate)
+        
+        # Create linspace on CPU to avoid meta device issues, then convert to list
+        # This avoids "Cannot copy out of meta tensor" error during model initialization
+        dp_rates = torch.linspace(0, drop_path_rate, total_depth, device='cpu').tolist()
         cur = 0
         
         # Create stages in the same order as the original model
