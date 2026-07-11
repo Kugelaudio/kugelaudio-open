@@ -265,7 +265,33 @@ with torch.no_grad():
 processor.save_audio(outputs.speech_outputs[0], "warm_voice_output.wav")
 ```
 
-> **Note:** Voice cloning from raw audio is not supported in this open-source release. Only the pre-encoded voices listed in `voices/voices.json` are available.
+#### Creating your own voice
+
+You can encode your own pre-encoded voice from a reference recording (a few
+seconds of clean speech are enough). The acoustic encoder needed for this
+ships with the model checkpoint:
+
+```bash
+kugelaudio encode-voice reference.wav -o my_voice.pt
+kugelaudio generate "Hello world!" --voice my_voice.pt -o output.wav
+```
+
+Or from Python:
+
+```python
+audio = processor.audio_processor("reference.wav", return_tensors="pt")["audio"]
+with torch.no_grad():
+    encoded = model.acoustic_tokenizer.encode(audio.to(device=device, dtype=dtype))
+torch.save({"acoustic_mean": encoded.mean.to(torch.float32).cpu()}, "my_voice.pt")
+
+# Use it like any other voice
+inputs = processor(text="Hello world!", voice="my_voice.pt", return_tensors="pt")
+```
+
+Note that `model.model.strip_encoders()` removes the acoustic encoder to save
+memory — skip that call if you want to encode voices in the same session.
+
+> **Note:** All generated audio is watermarked regardless of which voice is used.
 
 ## Hosted API
 

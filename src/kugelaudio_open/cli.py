@@ -23,6 +23,10 @@ Examples:
   # Generate with a specific voice
   kugelaudio generate "Hello world!" --voice default -o output.wav
   
+  # Encode your own voice from a reference recording
+  kugelaudio encode-voice reference.wav -o my_voice.pt
+  kugelaudio generate "Hello world!" --voice my_voice.pt -o output.wav
+  
   # Check watermark in audio file
   kugelaudio verify audio.wav
         """,
@@ -41,10 +45,22 @@ Examples:
     gen_parser.add_argument("text", help="Text to synthesize")
     gen_parser.add_argument("-o", "--output", default="output.wav", help="Output file path")
     gen_parser.add_argument(
-        "-v", "--voice", help="Pre-encoded voice name (from voices.json registry)"
+        "-v",
+        "--voice",
+        help="Pre-encoded voice: a name from the voices.json registry or a path to a .pt file",
     )
     gen_parser.add_argument("--model", default="kugelaudio/kugelaudio-0-open", help="Model ID")
     gen_parser.add_argument("--cfg-scale", type=float, default=3.0, help="Guidance scale")
+
+    # Encode voice command
+    encode_parser = subparsers.add_parser(
+        "encode-voice", help="Encode a reference recording into a pre-encoded voice (.pt)"
+    )
+    encode_parser.add_argument(
+        "audio", help="Reference audio file (a few seconds of clean speech)"
+    )
+    encode_parser.add_argument("-o", "--output", default="voice.pt", help="Output .pt file path")
+    encode_parser.add_argument("--model", default="kugelaudio/kugelaudio-0-open", help="Model ID")
 
     # Verify command
     verify_parser = subparsers.add_parser("verify", help="Check watermark in audio")
@@ -99,6 +115,44 @@ Examples:
         # Save
         processor.save_audio(audio, args.output)
         print(f"Audio saved to {args.output}")
+
+    elif args.command == "encode-voice":
+        import os
+
+        import torch
+
+        from kugelaudio_open.models import KugelAudioForConditionalGenerationInference
+        from kugelaudio_open.processors import KugelAudioProcessor
+
+        if not os.path.exists(args.audio):
+            print(f"Error: audio file not found: {args.audio}")
+            sys.exit(1)
+
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        dtype = torch.bfloat16 if device == "cuda" else torch.float32
+
+        print(f"Loading model {args.model}...")
+        model = KugelAudioForConditionalGenerationInference.from_pretrained(
+            args.model, torch_dtype=dtype
+        ).to(device)
+        model.eval()
+        # Note: encoders are NOT stripped here; the acoustic encoder is
+        # exactly what we need to turn audio into a voice embedding.
+
+        processor = KugelAudioProcessor.from_pretrained(args.model)
+
+        print(f"Encoding {args.audio}...")
+        audio = processor.audio_processor(args.audio, return_tensors="pt")["audio"]
+        audio = audio.to(device=device, dtype=dtype)
+        with torch.no_grad():
+            encoded = model.acoustic_tokenizer.encode(audio)
+
+        # Store as float32 so the voice file is independent of the dtype/device
+        # used for encoding; the model casts it at generation time.
+        acoustic_mean = encoded.mean.to(torch.float32).cpu()
+        torch.save({"acoustic_mean": acoustic_mean}, args.output)
+        print(f"Saved voice ({acoustic_mean.shape[1]} frames) to {args.output}")
+        print(f'Use it with: kugelaudio generate "Hello world!" --voice {args.output}')
 
     elif args.command == "verify":
         import numpy as np

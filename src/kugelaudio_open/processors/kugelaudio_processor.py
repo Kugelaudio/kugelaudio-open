@@ -165,14 +165,17 @@ class KugelAudioProcessor:
         return list(self.voices_registry.keys())
 
     def load_voice_cache(self, voice_name: str) -> dict:
-        """Load a pre-encoded voice by name from the voices registry.
+        """Load a pre-encoded voice by name or from a .pt file path.
 
         Supports loading from local directories and from HuggingFace Hub
         repositories. When the model was loaded from a HuggingFace repo,
         individual .pt voice files are downloaded automatically on demand.
+        A path to a local .pt file (e.g. one created with
+        ``kugelaudio encode-voice``) is also accepted.
 
         Args:
-            voice_name: Name of the voice (must be in voices.json registry).
+            voice_name: Name of the voice (must be in voices.json registry)
+                or a path to a local .pt voice file.
 
         Returns:
             Dict with "acoustic_mean" tensor, suitable for passing as voice_cache.
@@ -180,6 +183,12 @@ class KugelAudioProcessor:
         Raises:
             ValueError: If voice_name is not found in the registry.
         """
+        # Direct path to a local .pt voice file
+        if voice_name.endswith(".pt"):
+            if not os.path.exists(voice_name):
+                raise ValueError(f"Voice file '{voice_name}' does not exist")
+            return self._load_voice_file(voice_name)
+
         if voice_name not in self.voices_registry:
             available = ", ".join(self.voices_registry.keys()) or "(none)"
             raise ValueError(f"Voice '{voice_name}' not found. Available voices: {available}")
@@ -211,10 +220,15 @@ class KugelAudioProcessor:
                 f"HuggingFace repo: {self._model_name_or_path}"
             )
 
+        return self._load_voice_file(voice_path)
+
+    @staticmethod
+    def _load_voice_file(voice_path: str) -> dict:
+        """Load and validate a .pt voice file."""
         voice_cache = torch.load(voice_path, map_location="cpu", weights_only=True)
         if "acoustic_mean" not in voice_cache:
             raise ValueError(
-                f"Voice file '{voice_file}' does not contain 'acoustic_mean'. "
+                f"Voice file '{voice_path}' does not contain 'acoustic_mean'. "
                 f"Available keys: {list(voice_cache.keys())}"
             )
         return voice_cache
