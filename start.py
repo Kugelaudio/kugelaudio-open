@@ -14,7 +14,7 @@ Usage:
     
     # Generate speech
     python start.py generate "Hello world!" -o output.wav
-    python start.py generate "Hallo Welt!" --voice warm -o warm.wav
+    python start.py generate "Hallo Welt!" --voice clear -o clear.wav
     
     # Verify watermark
     python start.py verify audio.wav
@@ -38,7 +38,7 @@ Examples:
   
   # Generate speech from command line
   python start.py generate "Hello world!" -o output.wav
-  python start.py generate "Hallo Welt!" --voice warm -o warm.wav
+  python start.py generate "Hallo Welt!" --voice clear -o clear.wav
   python start.py generate "Premium quality" --model kugelaudio/kugelaudio-0-open -o premium.wav
   
   # Verify watermark in audio

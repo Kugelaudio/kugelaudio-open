@@ -201,7 +201,7 @@ Then open http://127.0.0.1:7860 in your browser.
 uv run python start.py generate "Hello, this is KugelAudio!" -o hello.wav
 
 # With a specific pre-encoded voice
-uv run python start.py generate "Hello in a warm voice!" --voice warm -o warm.wav
+uv run python start.py generate "Hallo, das ist eine klare Stimme!" --voice clear -o clear.wav
 
 # Using the default model for higher quality
 uv run python start.py generate "Premium quality speech" --model kugelaudio/kugelaudio-0-open -o premium.wav
@@ -233,7 +233,7 @@ model.model.strip_encoders()
 processor = KugelAudioProcessor.from_pretrained("kugelaudio/kugelaudio-0-open")
 
 # See available voices
-print(processor.get_available_voices())  # ["default", "warm", "clear", "english_female", "english_male"]
+print(processor.get_available_voices())  # ["default", "clear", "english_female", "english_male"]
 
 # Generate speech (watermark is automatically applied)
 inputs = processor(text="Hello world!", voice="default", return_tensors="pt")
@@ -253,7 +253,6 @@ KugelAudio provides pre-encoded voices that can be selected by name. The voices 
 | Voice | Language | Description |
 |-------|----------|-------------|
 | `default` | German | Calm female narrator |
-| `warm` | German | Warm male narrator |
 | `clear` | German | Clear, young female conversational voice |
 | `english_female` | English | Friendly female teacher (British English) |
 | `english_male` | English | Conversational male voice (British English) |
@@ -263,16 +262,16 @@ Voices work across languages but sound most natural, and are most reliable, in t
 ```python
 # List available voices
 voices = processor.get_available_voices()
-print(voices)  # ["default", "warm", "clear", "english_female", "english_male"]
+print(voices)  # ["default", "clear", "english_female", "english_male"]
 
 # Generate with a specific voice
-inputs = processor(text="Hello world!", voice="warm", return_tensors="pt")
+inputs = processor(text="Hello world!", voice="english_male", return_tensors="pt")
 inputs = {k: v.to(device) if isinstance(v, torch.Tensor) else v for k, v in inputs.items()}
 
 with torch.no_grad():
     outputs = model.generate(**inputs, cfg_scale=3.0)
 
-processor.save_audio(outputs.speech_outputs[0], "warm_voice_output.wav")
+processor.save_audio(outputs.speech_outputs[0], "english_male_output.wav")
 ```
 
 > **Note:** Voice cloning from raw audio is not supported in this open-source release. Only the pre-encoded voices listed in `voices/voices.json` are available.

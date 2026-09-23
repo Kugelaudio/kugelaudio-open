@@ -4,11 +4,6 @@
     "description": "Calm female narrator",
     "language": "de"
   },
-  "warm": {
-    "file": "warm.pt",
-    "description": "Warm male narrator",
-    "language": "de"
-  },
   "clear": {
     "file": "clear.pt",
     "description": "Clear, young female conversational voice",
