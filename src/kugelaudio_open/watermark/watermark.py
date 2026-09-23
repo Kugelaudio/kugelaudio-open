@@ -37,6 +37,19 @@ class WatermarkResult:
     frame_probabilities: Optional[torch.Tensor] = None
 
 
+def resample(audio: torch.Tensor, orig_sr: int, target_sr: int) -> torch.Tensor:
+    """Polyphase-resample the last axis of ``audio``, keeping its device and dtype."""
+    if orig_sr == target_sr:
+        return audio
+    from math import gcd
+
+    from scipy.signal import resample_poly
+
+    g = gcd(orig_sr, target_sr)
+    out = resample_poly(audio.detach().float().cpu().numpy(), target_sr // g, orig_sr // g, axis=-1)
+    return torch.from_numpy(out).to(device=audio.device, dtype=audio.dtype)
+
+
 class AudioWatermark:
     """Professional audio watermarking using Facebook's AudioSeal.
     
@@ -119,19 +132,7 @@ class AudioWatermark:
         target_sr: int
     ) -> torch.Tensor:
         """Resample audio to target sample rate."""
-        if orig_sr == target_sr:
-            return audio
-        
-        try:
-            import torchaudio.functional as F
-            return F.resample(audio, orig_sr, target_sr)
-        except ImportError:
-            # Fallback using scipy
-            from scipy import signal
-            audio_np = audio.cpu().numpy()
-            num_samples = int(len(audio_np.flatten()) * target_sr / orig_sr)
-            resampled = signal.resample(audio_np.flatten(), num_samples)
-            return torch.from_numpy(resampled).reshape(audio.shape[0], audio.shape[1], -1).to(audio.device)
+        return resample(audio, orig_sr, target_sr)
     
     def embed(
         self,

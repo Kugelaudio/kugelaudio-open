@@ -40,6 +40,7 @@ dependencies = [
     "soundfile>=0.12.0",
     "tqdm>=4.65.0",
     "audioseal>=0.1.0",
+    "setuptools",  # audioseal torch.compiles its model; inductor needs setuptools on Linux
     "gradio>=6.2.0",
 ]
 
