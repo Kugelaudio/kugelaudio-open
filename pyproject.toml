@@ -88,3 +88,15 @@ line-length = 100
 target-version = "py310"
 select = ["E", "F", "W", "I", "UP"]
 ignore = ["E501"]
+
+# PyPI only ships CPU torch wheels for Linux aarch64 (GH200, DGX Spark); take the CUDA build there.
+[tool.uv]
+constraint-dependencies = ["torch==2.9.1"]
+
+[tool.uv.sources]
+torch = [{ index = "pytorch-cu128", marker = "sys_platform == 'linux' and platform_machine == 'aarch64'" }]
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true

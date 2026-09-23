@@ -1,17 +1,27 @@
 {
   "default": {
     "file": "default.pt",
-    "description": "Default neutral voice",
-    "language": "en"
+    "description": "Calm female narrator",
+    "language": "de"
   },
   "warm": {
     "file": "warm.pt",
-    "description": "Warm, friendly voice",
-    "language": "en"
+    "description": "Warm male narrator",
+    "language": "de"
   },
   "clear": {
     "file": "clear.pt",
-    "description": "Clear, professional voice",
+    "description": "Clear, young female conversational voice",
+    "language": "de"
+  },
+  "english_female": {
+    "file": "english_female.pt",
+    "description": "Friendly female teacher (British English)",
+    "language": "en"
+  },
+  "english_male": {
+    "file": "english_male.pt",
+    "description": "Conversational male voice (British English)",
     "language": "en"
   }
 }

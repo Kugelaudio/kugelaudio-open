@@ -233,7 +233,7 @@ model.model.strip_encoders()
 processor = KugelAudioProcessor.from_pretrained("kugelaudio/kugelaudio-0-open")
 
 # See available voices
-print(processor.get_available_voices())  # ["default", "warm", "clear"]
+print(processor.get_available_voices())  # ["default", "warm", "clear", "english_female", "english_male"]
 
 # Generate speech (watermark is automatically applied)
 inputs = processor(text="Hello world!", voice="default", return_tensors="pt")
@@ -250,10 +250,20 @@ processor.save_audio(outputs.speech_outputs[0], "output.wav")
 
 KugelAudio provides pre-encoded voices that can be selected by name. The voices are stored as `.pt` files in the model repository and are automatically downloaded from HuggingFace when needed.
 
+| Voice | Language | Description |
+|-------|----------|-------------|
+| `default` | German | Calm female narrator |
+| `warm` | German | Warm male narrator |
+| `clear` | German | Clear, young female conversational voice |
+| `english_female` | English | Friendly female teacher (British English) |
+| `english_male` | English | Conversational male voice (British English) |
+
+Voices work across languages but sound most natural, and are most reliable, in their native language.
+
 ```python
 # List available voices
 voices = processor.get_available_voices()
-print(voices)  # ["default", "warm", "clear"]
+print(voices)  # ["default", "warm", "clear", "english_female", "english_male"]
 
 # Generate with a specific voice
 inputs = processor(text="Hello world!", voice="warm", return_tensors="pt")

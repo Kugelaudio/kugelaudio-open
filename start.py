@@ -14,7 +14,7 @@ Usage:
     
     # Generate speech
     python start.py generate "Hello world!" -o output.wav
-    python start.py generate "Clone my voice" -r reference.wav -o cloned.wav
+    python start.py generate "Hallo Welt!" --voice warm -o warm.wav
     
     # Verify watermark
     python start.py verify audio.wav
@@ -26,7 +26,7 @@ import sys
 
 def main():
     parser = argparse.ArgumentParser(
-        description="KugelAudio - Open-source text-to-speech with voice cloning",
+        description="KugelAudio - Open-source text-to-speech with pre-encoded voices",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -38,7 +38,7 @@ Examples:
   
   # Generate speech from command line
   python start.py generate "Hello world!" -o output.wav
-  python start.py generate "Clone my voice" -r reference.wav -o cloned.wav
+  python start.py generate "Hallo Welt!" --voice warm -o warm.wav
   python start.py generate "Premium quality" --model kugelaudio/kugelaudio-0-open -o premium.wav
   
   # Verify watermark in audio
@@ -59,7 +59,7 @@ Examples:
     gen_parser = subparsers.add_parser("generate", help="Generate speech from text")
     gen_parser.add_argument("text", help="Text to synthesize")
     gen_parser.add_argument("-o", "--output", default="output.wav", help="Output file path")
-    gen_parser.add_argument("-r", "--reference", help="Reference audio for voice cloning")
+    gen_parser.add_argument("-v", "--voice", default="default", help="Pre-encoded voice name (from voices.json registry)")
     gen_parser.add_argument("--model", default="kugelaudio/kugelaudio-0-open", help="Model ID")
     gen_parser.add_argument("--cfg-scale", type=float, default=3.0, help="Guidance scale (1.0-10.0)")
     gen_parser.add_argument("--max-tokens", type=int, default=4096, help="Maximum generation tokens")
@@ -104,8 +104,7 @@ Examples:
         print(f"   Model: {args.model}")
         print(f"   Device: {device}")
         print(f"   Text: {args.text[:50]}..." if len(args.text) > 50 else f"   Text: {args.text}")
-        if args.reference:
-            print(f"   Reference: {args.reference}")
+        print(f"   Voice: {args.voice}")
         print()
 
         print("Loading model...")
@@ -119,7 +118,7 @@ Examples:
         # Process inputs
         inputs = processor(
             text=args.text,
-            voice_prompt=args.reference,
+            voice=args.voice,
             return_tensors="pt"
         )
         inputs = {k: v.to(device) if isinstance(v, torch.Tensor) else v for k, v in inputs.items()}

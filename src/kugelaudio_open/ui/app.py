@@ -284,7 +284,7 @@ def create_app() -> "gr.Blocks":
             f"""
         <div style="text-align: center; margin-bottom: 1.5rem;">
             <h1 style="margin-bottom: 0.5rem;">🎙️ KugelAudio</h1>
-            <p style="color: #666; margin-bottom: 1rem;">Open-source text-to-speech with voice cloning capabilities</p>
+            <p style="color: #666; margin-bottom: 1rem;">Open-source text-to-speech with pre-encoded voices</p>
             <div style="display: flex; justify-content: center; align-items: center; gap: 2rem; flex-wrap: wrap;">
                 <a href="https://kugelaudio.com" target="_blank">
                     <img src="{kugelaudio_logo}" alt="KugelAudio" style="height: 50px; width: auto;">
